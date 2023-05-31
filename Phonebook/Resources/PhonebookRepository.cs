@@ -1,16 +1,41 @@
 ﻿using Dapper;
+using Newtonsoft.Json;
 using System.Data.SqlClient;
+using System.Net;
 
 namespace Phonebook.Resources
 {
     public class PhonebookRepository
     {
-        private string connectionString = "Data Source=192.168.1.109,1433;Initial Catalog=PhoneBookDb;Persist Security Info=True;User ID=sa;Password=12qwAS!@";
+        private string connectionString = "Data Source={ServerIp},1433;Initial Catalog=PhoneBookDb;Persist Security Info=True;User ID=sa;Password=12qwAS!@";
 
         private static PhonebookRepository _instance;
+        static Config config;
+
         public static PhonebookRepository Instance
         {
             get { return _instance ??= new PhonebookRepository(); }
+        }
+
+        static PhonebookRepository()
+        {
+            LoadJson();
+        }
+
+        static void LoadJson()
+        {
+            using (StreamReader r = new StreamReader("config.json"))
+            {
+                string json = r.ReadToEnd();
+                config = JsonConvert.DeserializeObject<Config>(json);
+            }
+        }
+
+        private string GetConnectionString()
+        {
+            var generatedConnectionString = connectionString.Replace("{ServerIp}", config.ServerIp);
+
+            return generatedConnectionString;
         }
 
         public bool IsExist(PhonebookRecord phonebookRecord)
@@ -27,7 +52,7 @@ namespace Phonebook.Resources
 
             PhonebookRecord result;
 
-            using (var connection = new SqlConnection(connectionString))
+            using (var connection = new SqlConnection(GetConnectionString()))
             {
                 result = connection.QuerySingleOrDefault<PhonebookRecord>(existQuery);
             }
@@ -44,7 +69,7 @@ namespace Phonebook.Resources
 
             PhonebookRecord result;
 
-            using (var connection = new SqlConnection(connectionString))
+            using (var connection = new SqlConnection(GetConnectionString()))
             {
                 result = connection.QuerySingleOrDefault<PhonebookRecord>(existQuery);
             }
@@ -61,7 +86,7 @@ namespace Phonebook.Resources
 
             PhonebookRecord result;
 
-            using (var connection = new SqlConnection(connectionString))
+            using (var connection = new SqlConnection(GetConnectionString()))
             {
                 result = connection.QuerySingleOrDefault<PhonebookRecord>(existQuery);
             }
@@ -86,7 +111,7 @@ namespace Phonebook.Resources
 
             List<PhonebookRecord> result;
 
-            using (var connection = new SqlConnection(connectionString))
+            using (var connection = new SqlConnection(GetConnectionString()))
             {
                 result = connection.Query<PhonebookRecord>(existQuery).ToList();
             }
@@ -136,7 +161,7 @@ namespace Phonebook.Resources
 
             List<PhonebookRecord> result;
 
-            using (var connection = new SqlConnection(connectionString))
+            using (var connection = new SqlConnection(GetConnectionString()))
             {
                 result = connection.Query<PhonebookRecord>(existQuery).ToList();
             }
@@ -170,7 +195,7 @@ namespace Phonebook.Resources
                 @TelegramNumber,
                 @Description)";
 
-            using (var connection = new SqlConnection(connectionString))
+            using (var connection = new SqlConnection(GetConnectionString()))
             {
                 var result = connection.Execute(insertQuery, new
                 {
@@ -201,7 +226,7 @@ namespace Phonebook.Resources
                                            (@CategoryId,
                                             @PhoneBookId)";
 
-                using (var connection = new SqlConnection(connectionString))
+                using (var connection = new SqlConnection(GetConnectionString()))
                 {
                     var result = connection.Execute(insertQuery, new
                     {
@@ -218,7 +243,7 @@ namespace Phonebook.Resources
                             DELETE FROM [dbo].[PhoneBook]
                                   WHERE [Id] = @Id";
 
-            using (var connection = new SqlConnection(connectionString))
+            using (var connection = new SqlConnection(GetConnectionString()))
             {
                 var result = connection.Execute(deleteQuery, new
                 {
@@ -243,7 +268,7 @@ namespace Phonebook.Resources
                               ,[Description] = @Description
                          WHERE [Id] = @Id";
 
-            using (var connection = new SqlConnection(connectionString))
+            using (var connection = new SqlConnection(GetConnectionString()))
             {
                 var result = connection.Execute(insertQuery, new
                 {
@@ -267,7 +292,7 @@ namespace Phonebook.Resources
                             DELETE FROM [dbo].[PhoneBookCategories]
                                   WHERE [PhoneBookId] = @PhoneBookId";
 
-            using (var connection = new SqlConnection(connectionString))
+            using (var connection = new SqlConnection(GetConnectionString()))
             {
                 var result = connection.Execute(deleteQuery, new
                 {
